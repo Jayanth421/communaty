@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { CourseCard } from "../../components/course-card"
-import { FilterSidebar } from "../../components/filter-sidebar"
+import { CourseCard } from "../../../components/course-card"
+import { FilterSidebar } from "../../../components/filter-sidebar"
 import { Badge } from "@repo/ui/badge"
 import { Loader2, Sparkles } from "lucide-react"
 import { db } from "@repo/firebase"

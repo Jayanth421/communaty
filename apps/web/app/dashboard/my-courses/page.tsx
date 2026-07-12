@@ -20,7 +20,7 @@ export default function MyCoursesPage() {
         const q = query(collection(db, "courses"))
         const snapshot = await getDocs(q)
         const fetchedCourses: any[] = []
-        snapshot.forEach((doc, i) => {
+        snapshot.forEach((doc) => {
           // Assign mock progress since we don't have user-specific enrollments yet
           const progress = [45, 72, 10, 100, 28, 60][fetchedCourses.length % 6] ?? 0
           fetchedCourses.push({ id: doc.id, ...doc.data(), progress })
