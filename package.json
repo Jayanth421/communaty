@@ -1,6 +1,9 @@
 {
   "name": "project",
   "private": true,
+
+  "packageManager": "npm@11.5.2",
+
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -8,11 +11,13 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types"
   },
+
   "devDependencies": {
     "prettier": "^3.7.4",
     "turbo": "^2.10.4",
     "typescript": "5.9.2"
   },
+
   "engines": {
     "node": ">=18"
   },
