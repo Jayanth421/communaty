@@ -24,14 +24,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       if (!user) {
         router.replace("/login")
       }
-      // Temporarily disabled role check so you can access the admin page
-      // else if (role !== "admin") {
-      //   router.replace("/dashboard")
-      // }
+      else if (role !== "admin") {
+        router.replace("/dashboard")
+      }
     }
   }, [user, role, loading, router])
 
-  if (loading || !user) {
+  if (loading || !user || role !== "admin") {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-muted-foreground animate-pulse text-sm">Loading admin dashboard...</div>

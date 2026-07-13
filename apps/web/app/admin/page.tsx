@@ -7,12 +7,14 @@ import { Button } from "@repo/ui/button"
 import { Users, BookOpen, Loader2, Plus } from "lucide-react"
 import Link from "next/link"
 import { db } from "@repo/firebase"
-import { collection, getDocs, query, orderBy, limit } from "firebase/firestore"
+import { collection, getDocs } from "firebase/firestore"
+import { getSupabaseStatus, listDocuments } from "../../lib/supabase-documents"
 
 export default function AdminDashboardPage() {
-  const [stats, setStats] = useState({ users: 0, courses: 0 })
+  const [stats, setStats] = useState({ users: 0, courses: 0, documents: 0 })
   const [recentUsers, setRecentUsers] = useState<any[]>([])
   const [recentReports, setRecentReports] = useState<any[]>([])
+  const [documents, setDocuments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -24,6 +26,7 @@ export default function AdminDashboardPage() {
         setStats({
           users: usersSnap.size,
           courses: coursesSnap.size,
+          documents: 0,
         })
 
         // Recent users
@@ -40,6 +43,10 @@ export default function AdminDashboardPage() {
           reportsArr.push({ id: doc.id, ...doc.data() })
         })
         setRecentReports(reportsArr.slice(0, 3))
+
+        const supabaseDocuments = await listDocuments(5)
+        setDocuments(supabaseDocuments)
+        setStats((current) => ({ ...current, documents: supabaseDocuments.length }))
       } catch (error) {
         console.error("Error fetching admin dashboard data:", error)
       } finally {
@@ -52,7 +59,9 @@ export default function AdminDashboardPage() {
   const STATS_CONFIG = [
     { label: "Total Users", value: loading ? "..." : stats.users.toLocaleString(), icon: Users, color: "text-blue-500" },
     { label: "Active Courses", value: loading ? "..." : stats.courses.toLocaleString(), icon: BookOpen, color: "text-green-500" },
+    { label: "Documents", value: loading ? "..." : stats.documents.toLocaleString(), icon: BookOpen, color: "text-violet-500" },
   ]
+  const supabaseStatus = getSupabaseStatus()
 
   return (
     <div className="space-y-8">
@@ -67,7 +76,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {STATS_CONFIG.map(({ label, value, icon: Icon, color }) => (
           <Card key={label}>
             <CardContent className="p-5 flex items-center gap-4">
@@ -119,6 +128,32 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader className="pb-3 flex-row items-center justify-between">
+            <CardTitle className="text-base">Supabase Documents</CardTitle>
+            <Badge variant="outline" className="text-xs">{supabaseStatus.table}</Badge>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {!supabaseStatus.configured ? (
+              <p className="text-sm text-muted-foreground py-6">
+                Add Supabase env vars to store and review document records.
+              </p>
+            ) : documents.length === 0 ? (
+              <p className="text-center text-muted-foreground text-sm py-6">No documents found.</p>
+            ) : (
+              documents.map((doc) => (
+                <div key={doc.id ?? doc.title} className="flex items-center justify-between gap-3 text-sm">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{doc.title}</p>
+                    <p className="text-xs text-muted-foreground truncate">{doc.type} - {doc.owner_email || "No owner"}</p>
+                  </div>
+                  <Badge variant="outline" className="text-xs capitalize">{doc.status || "draft"}</Badge>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
         {/* Recent Reports */}
         <Card>
           <CardHeader className="pb-3 flex-row items-center justify-between">
@@ -158,4 +193,3 @@ export default function AdminDashboardPage() {
     </div>
   )
 }
-

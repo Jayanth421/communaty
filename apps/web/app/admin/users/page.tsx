@@ -7,11 +7,12 @@ import { Badge } from "@repo/ui/badge"
 import { Input } from "@repo/ui/input"
 import { Search, MoreVertical, Shield, Ban, Mail, Loader2 } from "lucide-react"
 import { db } from "@repo/firebase"
-import { collection, getDocs, orderBy, query } from "firebase/firestore"
+import { collection, getDocs, query } from "firebase/firestore"
 
 const ROLE_COLORS: Record<string, string> = {
   admin: "bg-red-500/10 text-red-600 border-red-500/20",
   instructor: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+  institute: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
   moderator: "bg-violet-500/10 text-violet-600 border-violet-500/20",
   student: "",
 }
@@ -65,7 +66,7 @@ export default function AdminUsersPage() {
           <Input className="pl-9" placeholder="Search by name or email..." value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <div className="flex gap-2">
-          {["All", "Admin", "Instructor", "Moderator", "Student"].map((f) => (
+          {["All", "Admin", "Institute", "Instructor", "Moderator", "Student"].map((f) => (
             <Badge key={f} variant={f === "All" ? "default" : "secondary"} className="cursor-pointer">{f}</Badge>
           ))}
         </div>

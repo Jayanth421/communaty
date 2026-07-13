@@ -3,13 +3,13 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBMieR1kdBtnsU0tjm2NW_duc9dgxzypLw",
-  authDomain: "copex-5eea9.firebaseapp.com",
-  projectId: "copex-5eea9",
-  storageBucket: "copex-5eea9.firebasestorage.app",
-  messagingSenderId: "334449759192",
-  appId: "1:334449759192:web:19cd921ea2d47197f418ad",
-  measurementId: "G-D8MPTP7Z78"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase only once (safe for HMR in Next.js)

@@ -18,6 +18,8 @@ type Course = {
 
 export function CourseCard({ course }: { course: Course }) {
   const isFree = !course.price || course.price === 0
+  const rating = course.rating ?? 0
+  const students = course.students ?? 0
 
   return (
     <Card className="flex flex-col overflow-hidden transition-all hover:shadow-md hover:border-foreground/20 group">
@@ -51,16 +53,16 @@ export function CourseCard({ course }: { course: Course }) {
       </CardHeader>
       <CardContent className="p-4 pt-0 flex-1">
         <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
-          {course.rating > 0 && (
+          {rating > 0 && (
             <div className="flex items-center gap-1">
               <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-              <span className="font-medium text-foreground">{course.rating}</span>
+              <span className="font-medium text-foreground">{rating}</span>
             </div>
           )}
-          {course.students > 0 && (
+          {students > 0 && (
             <div className="flex items-center gap-1">
               <Users className="w-3.5 h-3.5" />
-              <span>{((course.students || 0) / 1000).toFixed(1)}k</span>
+              <span>{(students / 1000).toFixed(1)}k</span>
             </div>
           )}
           {course.duration && (

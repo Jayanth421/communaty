@@ -4,7 +4,8 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
-import { auth } from "@repo/firebase"
+import { auth, db } from "@repo/firebase"
+import { doc, serverTimestamp, setDoc } from "firebase/firestore"
 import { Button } from "@repo/ui/button"
 import { Input } from "@repo/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/card"
@@ -14,6 +15,7 @@ export default function SignupPage() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [accountType, setAccountType] = useState<"student" | "institute">("student")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
@@ -27,6 +29,15 @@ export default function SignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password)
       await updateProfile(userCredential.user, {
         displayName: name
+      })
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        uid: userCredential.user.uid,
+        displayName: name,
+        email,
+        role: accountType,
+        accountType,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       })
       router.push("/dashboard") // Redirect to dashboard on success
     } catch (err: any) {
@@ -89,6 +100,20 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="accountType" className="text-sm font-medium leading-none">
+                Account type
+              </label>
+              <select
+                id="accountType"
+                value={accountType}
+                onChange={(e) => setAccountType(e.target.value as "student" | "institute")}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="student">Student</option>
+                <option value="institute">Institute</option>
+              </select>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">

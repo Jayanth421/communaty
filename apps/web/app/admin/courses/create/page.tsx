@@ -9,6 +9,7 @@ import { ArrowLeft, Loader2, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import { db } from "@repo/firebase"
 import { collection, addDoc, serverTimestamp } from "firebase/firestore"
+import { createDocument } from "../../../../lib/supabase-documents"
 
 export default function CreateCoursePage() {
   const router = useRouter()
@@ -48,6 +49,20 @@ export default function CreateCoursePage() {
         price: form.price ? parseFloat(form.price) : 0,
         createdAt: serverTimestamp(),
       })
+      await createDocument({
+        title: form.title,
+        type: "course",
+        owner_email: form.instructor,
+        status: form.status === "Published" ? "published" : "review",
+        public_url: form.thumbnail,
+        metadata: {
+          category: form.category,
+          difficulty: form.difficulty,
+          duration: form.duration,
+        },
+      }).catch((error) => {
+        console.warn("Course saved to Firebase, but Supabase document sync failed:", error)
+      })
       setSaved(true)
       setTimeout(() => router.push("/admin/courses"), 1500)
     } catch (error) {
@@ -65,7 +80,7 @@ export default function CreateCoursePage() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold">Create New Course</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">Add a new course to the Firestore database.</p>
+          <p className="text-muted-foreground text-sm mt-0.5">Add course data to Firebase and document metadata to Supabase.</p>
         </div>
       </div>
 

@@ -3,9 +3,9 @@
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { auth, db } from "@repo/firebase"
 import { onAuthStateChanged, User, signOut as firebaseSignOut } from "firebase/auth"
-import { doc, getDoc, setDoc, serverTimestamp, onSnapshot } from "firebase/firestore"
+import { doc, setDoc, serverTimestamp, onSnapshot } from "firebase/firestore"
 
-export type UserRole = "student" | "instructor" | "moderator" | "admin"
+export type UserRole = "student" | "institute" | "instructor" | "moderator" | "admin"
 
 type AuthContextType = {
   user: User | null
@@ -45,6 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 email: currentUser.email,
                 displayName: currentUser.displayName ?? "",
                 role: "student",
+                accountType: "student",
                 createdAt: serverTimestamp(),
               })
               setRole("student")

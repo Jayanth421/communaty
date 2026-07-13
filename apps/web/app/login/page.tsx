@@ -4,7 +4,8 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { signInWithEmailAndPassword } from "firebase/auth"
-import { auth } from "@repo/firebase"
+import { auth, db } from "@repo/firebase"
+import { doc, getDoc } from "firebase/firestore"
 import { Button } from "@repo/ui/button"
 import { Input } from "@repo/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/card"
@@ -23,8 +24,10 @@ export default function LoginPage() {
     setError("")
     
     try {
-      await signInWithEmailAndPassword(auth, email, password)
-      router.push("/dashboard") // Redirect to dashboard on success
+      const credential = await signInWithEmailAndPassword(auth, email, password)
+      const profile = await getDoc(doc(db, "users", credential.user.uid))
+      const role = profile.exists() ? profile.data().role : "student"
+      router.push(role === "admin" ? "/admin" : "/dashboard")
     } catch (err: any) {
       setError(err.message || "Failed to login")
     } finally {
