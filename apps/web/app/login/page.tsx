@@ -12,6 +12,7 @@ import { Input } from "@repo/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/card"
 import { ArrowRight, Eye, EyeOff } from "lucide-react"
 import { BrandMark } from "../../components/brand-mark"
+import { isAdminEmail } from "../../lib/admin"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -32,13 +33,14 @@ export default function LoginPage() {
 
       try {
         const profile = await getDoc(doc(db, "users", credential.user.uid))
-        role = profile.exists() ? profile.data().role : "student"
+        role = profile.exists() ? profile.data().role : (isAdminEmail(credential.user.email) ? "admin" : "student")
       } catch (profileError) {
         if (!(profileError instanceof FirebaseError && profileError.code === "permission-denied")) {
           throw profileError
         }
 
-        console.warn("Signed in, but could not read user profile. Falling back to student role.", profileError)
+        role = isAdminEmail(credential.user.email) ? "admin" : "student"
+        console.warn("Signed in, but could not read user profile. Falling back to email-based role detection.", profileError)
       }
 
       router.push(role === "admin" ? "/admin" : "/dashboard")

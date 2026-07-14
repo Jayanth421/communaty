@@ -5,6 +5,7 @@ import { auth, db } from "@repo/firebase"
 import { FirebaseError } from "firebase/app"
 import { onAuthStateChanged, User, signOut as firebaseSignOut } from "firebase/auth"
 import { doc, setDoc, serverTimestamp, onSnapshot } from "firebase/firestore"
+import { resolveRoleFromEmail } from "../lib/admin"
 
 export type UserRole = "student" | "institute" | "instructor" | "moderator" | "admin"
 
@@ -41,32 +42,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           unsubscribeSnapshot = onSnapshot(userRef, async (snap) => {
             if (snap.exists()) {
-              setRole((snap.data().role as UserRole) ?? "student")
+              setRole((snap.data().role as UserRole) ?? resolveRoleFromEmail(currentUser.email))
               setLoading(false)
             } else {
               // First login — create user doc with default role
+              const resolvedRole = resolveRoleFromEmail(currentUser.email)
               await setDoc(userRef, {
                 uid: currentUser.uid,
                 email: currentUser.email,
                 displayName: currentUser.displayName ?? "",
-                role: "student",
-                accountType: "student",
+                role: resolvedRole,
+                accountType: resolvedRole,
                 createdAt: serverTimestamp(),
               })
-              setRole("student")
+              setRole(resolvedRole)
               setLoading(false)
             }
           }, (error) => {
             console.error("Error listening to user role:", error)
             if (error instanceof FirebaseError && error.code === "permission-denied") {
-              console.warn("Signed in, but user profile is not readable. Falling back to student role.")
+              console.warn("Signed in, but user profile is not readable. Falling back to email-based role detection.")
             }
-            setRole("student")
+            setRole(resolveRoleFromEmail(currentUser.email))
             setLoading(false)
           })
         } catch (error) {
           console.error("Error setting up role listener:", error)
-          setRole("student")
+          setRole(resolveRoleFromEmail(currentUser.email))
           setLoading(false)
         }
       } else {
