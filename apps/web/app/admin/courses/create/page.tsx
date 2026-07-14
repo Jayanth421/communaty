@@ -15,9 +15,12 @@ export default function CreateCoursePage() {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState("")
   const [form, setForm] = useState({
     title: "",
     instructor: "",
+    contactEmail: "",
+    mobileNumber: "",
     description: "",
     difficulty: "Beginner",
     category: "",
@@ -40,7 +43,11 @@ export default function CreateCoursePage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.title || !form.instructor) return
+    setError("")
+    if (!form.title || !form.instructor || !form.contactEmail || !form.mobileNumber) {
+      setError("Course title, instructor, contact email, and mobile number are required.")
+      return
+    }
 
     setSaving(true)
     try {
@@ -67,6 +74,7 @@ export default function CreateCoursePage() {
       setTimeout(() => router.push("/admin/courses"), 1500)
     } catch (error) {
       console.error("Error creating course:", error)
+      setError(error instanceof Error ? error.message : "Could not create the course. Please try again.")
     } finally {
       setSaving(false)
     }
@@ -90,6 +98,11 @@ export default function CreateCoursePage() {
           Course created successfully! Redirecting...
         </div>
       )}
+      {error && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <Card>
@@ -102,6 +115,16 @@ export default function CreateCoursePage() {
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Instructor Name <span className="text-red-500">*</span></label>
               <Input name="instructor" value={form.instructor} onChange={handleChange} placeholder="e.g. John Doe" required />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Contact Email <span className="text-red-500">*</span></label>
+                <Input name="contactEmail" type="email" value={form.contactEmail} onChange={handleChange} placeholder="instructor@example.com" required />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Mobile Number <span className="text-red-500">*</span></label>
+                <Input name="mobileNumber" type="tel" value={form.mobileNumber} onChange={handleChange} placeholder="+1 555 0100" pattern="[0-9+\-\s()]{7,20}" required />
+              </div>
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Description</label>

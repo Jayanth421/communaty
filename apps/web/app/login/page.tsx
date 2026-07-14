@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { signInWithEmailAndPassword } from "firebase/auth"
+import { sendEmailVerification, signInWithEmailAndPassword } from "firebase/auth"
 import { FirebaseError } from "firebase/app"
 import { auth, db } from "@repo/firebase"
 import { doc, getDoc } from "firebase/firestore"
@@ -19,16 +19,24 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [resending, setResending] = useState(false)
   const [error, setError] = useState("")
+  const [message, setMessage] = useState("")
   const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
+    setMessage("")
     
     try {
       const credential = await signInWithEmailAndPassword(auth, email, password)
+      if (!credential.user.emailVerified) {
+        await sendEmailVerification(credential.user)
+        setError("Please verify your email before signing in. We sent a new verification email.")
+        return
+      }
       let role = "student"
 
       try {
@@ -51,6 +59,21 @@ export default function LoginPage() {
     }
   }
 
+  const handleResendVerification = async () => {
+    setResending(true)
+    setError("")
+    setMessage("")
+    try {
+      const credential = await signInWithEmailAndPassword(auth, email, password)
+      await sendEmailVerification(credential.user)
+      setMessage("Verification email sent again. Check your inbox.")
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Could not resend verification email")
+    } finally {
+      setResending(false)
+    }
+  }
+
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -68,6 +91,11 @@ export default function LoginPage() {
             {error && (
               <div className="p-3 text-sm text-destructive-foreground bg-destructive/20 rounded-md">
                 {error}
+              </div>
+            )}
+            {message && (
+              <div className="p-3 text-sm text-green-700 bg-green-500/10 border border-green-500/20 rounded-md">
+                {message}
               </div>
             )}
             <div className="space-y-2">
@@ -116,6 +144,9 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Sign in"}
               {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
+            </Button>
+            <Button type="button" variant="outline" className="w-full" disabled={resending || !email || !password} onClick={handleResendVerification}>
+              {resending ? "Sending..." : "Resend verification email"}
             </Button>
             <div className="text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{" "}

@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
+import { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from "firebase/auth"
 import { auth, db } from "@repo/firebase"
 import { doc, serverTimestamp, setDoc } from "firebase/firestore"
 import { Button } from "@repo/ui/button"
@@ -15,33 +15,40 @@ import { BrandMark } from "../../components/brand-mark"
 export default function SignupPage() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
+  const [mobileNumber, setMobileNumber] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [accountType, setAccountType] = useState<"student" | "institute">("student")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [message, setMessage] = useState("")
   const router = useRouter()
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
+    setMessage("")
     
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password)
       await updateProfile(userCredential.user, {
         displayName: name
       })
+      await sendEmailVerification(userCredential.user)
       await setDoc(doc(db, "users", userCredential.user.uid), {
         uid: userCredential.user.uid,
         displayName: name,
         email,
+        mobileNumber,
+        emailVerified: userCredential.user.emailVerified,
         role: accountType,
         accountType,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       })
-      router.push("/dashboard") // Redirect to dashboard on success
+      setMessage("Account created. We sent a verification email, please verify before continuing.")
+      setTimeout(() => router.push("/login"), 1200)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to sign up")
     } finally {
@@ -68,6 +75,11 @@ export default function SignupPage() {
                 {error}
               </div>
             )}
+            {message && (
+              <div className="p-3 text-sm text-green-700 bg-green-500/10 border border-green-500/20 rounded-md">
+                {message}
+              </div>
+            )}
             <div className="space-y-2">
               <label htmlFor="name" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                 Full Name
@@ -92,6 +104,20 @@ export default function SignupPage() {
                 required 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="mobileNumber" className="text-sm font-medium leading-none">
+                Mobile Number
+              </label>
+              <Input
+                id="mobileNumber"
+                type="tel"
+                placeholder="+1 555 0100"
+                pattern="[0-9+\-\s()]{7,20}"
+                required
+                value={mobileNumber}
+                onChange={(e) => setMobileNumber(e.target.value)}
               />
             </div>
             <div className="space-y-2">

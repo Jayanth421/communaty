@@ -4,22 +4,43 @@ import * as React from "react"
 import Link from "next/link"
 import { useTheme } from "next-themes"
 import { Button } from "@repo/ui/button"
-import { Moon, Sun, Bell, MessageSquare, UserCircle } from "lucide-react"
+import { Moon, Sun, Bell, MessageSquare, UserCircle, Menu, X } from "lucide-react"
 import { useAuth } from "../context/auth-context"
 import { BrandMark } from "./brand-mark"
+
+const navLinks = [
+  { href: "/explore", label: "Explore" },
+  { href: "/learn", label: "Learn" },
+  { href: "/community", label: "Community" },
+  { href: "/events", label: "Events" },
+  { href: "/career", label: "Career" },
+  { href: "/resources", label: "Resources" },
+  { href: "/pricing", label: "Pricing" },
+]
 
 export function Navbar() {
   const { setTheme, theme } = useTheme()
   const { user, role, signOut } = useAuth()
+  const [mobileOpen, setMobileOpen] = React.useState(false)
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-14 max-w-screen-2xl items-center px-4">
-        <div className="mr-4 hidden md:flex">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="mr-2 h-9 w-9 md:hidden"
+          onClick={() => setMobileOpen((open) => !open)}
+          aria-expanded={mobileOpen}
+        >
+          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          <span className="sr-only">Toggle menu</span>
+        </Button>
+        <div className="mr-4 flex">
           <div className="mr-6">
             <BrandMark />
           </div>
-          <nav className="flex items-center gap-6 text-sm">
+          <nav className="hidden items-center gap-6 text-sm md:flex">
             <Link
               href="/explore"
               className="transition-colors hover:text-foreground/80 text-foreground/60"
@@ -127,6 +148,40 @@ export function Navbar() {
           </nav>
         </div>
       </div>
+      {mobileOpen && (
+        <div className="border-t border-border/40 bg-background md:hidden">
+          <nav className="container mx-auto grid gap-1 px-4 py-3 text-sm">
+            <button
+              className="rounded-md px-3 py-2 text-left text-foreground/70 transition-colors hover:bg-accent hover:text-foreground"
+              onClick={() => {
+                setMobileOpen(false)
+                document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }))
+              }}
+            >
+              Search
+            </button>
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="rounded-md px-3 py-2 text-foreground/70 transition-colors hover:bg-accent hover:text-foreground"
+                onClick={() => setMobileOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+            {user && (
+              <Link
+                href="/dashboard"
+                className="rounded-md px-3 py-2 text-foreground/70 transition-colors hover:bg-accent hover:text-foreground"
+                onClick={() => setMobileOpen(false)}
+              >
+                Dashboard
+              </Link>
+            )}
+          </nav>
+        </div>
+      )}
     </header>
   )
 }
