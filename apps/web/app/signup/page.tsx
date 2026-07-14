@@ -9,12 +9,14 @@ import { doc, serverTimestamp, setDoc } from "firebase/firestore"
 import { Button } from "@repo/ui/button"
 import { Input } from "@repo/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/card"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, Eye, EyeOff } from "lucide-react"
+import { BrandMark } from "../../components/brand-mark"
 
 export default function SignupPage() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [accountType, setAccountType] = useState<"student" | "institute">("student")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -40,8 +42,8 @@ export default function SignupPage() {
         updatedAt: serverTimestamp(),
       })
       router.push("/dashboard") // Redirect to dashboard on success
-    } catch (err: any) {
-      setError(err.message || "Failed to sign up")
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to sign up")
     } finally {
       setLoading(false)
     }
@@ -51,6 +53,9 @@ export default function SignupPage() {
     <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-2 text-center">
+          <div className="flex justify-center pb-2">
+            <BrandMark compact />
+          </div>
           <CardTitle className="text-3xl font-bold tracking-tight">Create an account</CardTitle>
           <CardDescription>
             Enter your details to join COMMUNTAY
@@ -93,13 +98,24 @@ export default function SignupPage() {
               <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                 Password
               </label>
-              <Input 
-                id="password" 
-                type="password" 
-                required 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pr-11"
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword((current) => !current)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <div className="space-y-2">
               <label htmlFor="accountType" className="text-sm font-medium leading-none">

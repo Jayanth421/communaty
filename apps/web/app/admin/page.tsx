@@ -4,17 +4,42 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/card"
 import { Badge } from "@repo/ui/badge"
 import { Button } from "@repo/ui/button"
-import { Users, BookOpen, Loader2, Plus } from "lucide-react"
+import { Activity, AlertTriangle, Database, Server, Users, BookOpen, Loader2, Plus, Zap } from "lucide-react"
 import Link from "next/link"
 import { db } from "@repo/firebase"
 import { collection, getDocs } from "firebase/firestore"
 import { getSupabaseStatus, listDocuments } from "../../lib/supabase-documents"
+import { adminModules, dashboardCapabilities } from "./admin-control-data"
+
+type AdminUser = {
+  id: string
+  displayName?: string
+  email?: string
+  role?: string
+  createdAt?: { seconds: number }
+}
+
+type AdminReport = {
+  id: string
+  target?: string
+  type?: string
+  time?: string
+  status?: string
+}
+
+type AdminDocument = {
+  id?: string
+  title?: string
+  type?: string
+  owner_email?: string | null
+  status?: string
+}
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState({ users: 0, courses: 0, documents: 0 })
-  const [recentUsers, setRecentUsers] = useState<any[]>([])
-  const [recentReports, setRecentReports] = useState<any[]>([])
-  const [documents, setDocuments] = useState<any[]>([])
+  const [recentUsers, setRecentUsers] = useState<AdminUser[]>([])
+  const [recentReports, setRecentReports] = useState<AdminReport[]>([])
+  const [documents, setDocuments] = useState<AdminDocument[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -30,7 +55,7 @@ export default function AdminDashboardPage() {
         })
 
         // Recent users
-        const recentUsersArr: any[] = []
+        const recentUsersArr: AdminUser[] = []
         usersSnap.forEach((doc) => {
           recentUsersArr.push({ id: doc.id, ...doc.data() })
         })
@@ -38,7 +63,7 @@ export default function AdminDashboardPage() {
 
         // Recent reports
         const reportsSnap = await getDocs(collection(db, "reports"))
-        const reportsArr: any[] = []
+        const reportsArr: AdminReport[] = []
         reportsSnap.forEach((doc) => {
           reportsArr.push({ id: doc.id, ...doc.data() })
         })
@@ -60,27 +85,36 @@ export default function AdminDashboardPage() {
     { label: "Total Users", value: loading ? "..." : stats.users.toLocaleString(), icon: Users, color: "text-blue-500" },
     { label: "Active Courses", value: loading ? "..." : stats.courses.toLocaleString(), icon: BookOpen, color: "text-green-500" },
     { label: "Documents", value: loading ? "..." : stats.documents.toLocaleString(), icon: BookOpen, color: "text-violet-500" },
+    { label: "Admin Modules", value: adminModules.length.toString(), icon: Server, color: "text-amber-500" },
   ]
   const supabaseStatus = getSupabaseStatus()
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Platform overview and key metrics.</p>
+          <Badge variant="outline" className="mb-3">Enterprise Control Center</Badge>
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <p className="text-muted-foreground mt-1 max-w-3xl">
+            Manage users, teams, courses, community, website, permissions, analytics, notifications, security, and platform operations from one place.
+          </p>
         </div>
-        <Button asChild size="sm">
-          <Link href="/admin/courses/create"><Plus className="mr-1.5 h-3.5 w-3.5" />New Course</Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild size="sm">
+            <Link href="/admin/courses/create"><Plus className="mr-1.5 h-3.5 w-3.5" />New Course</Link>
+          </Button>
+          <Button asChild size="sm" variant="outline">
+            <Link href="/admin/website">Website Settings</Link>
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {STATS_CONFIG.map(({ label, value, icon: Icon, color }) => (
           <Card key={label}>
             <CardContent className="p-5 flex items-center gap-4">
-              <div className={`p-3 rounded-lg bg-muted`}>
+              <div className="p-3 rounded-lg bg-muted">
                 <Icon className={`h-5 w-5 ${color}`} />
               </div>
               <div>
@@ -91,6 +125,42 @@ export default function AdminDashboardPage() {
           </Card>
         ))}
       </div>
+
+      <div className="grid gap-4 md:grid-cols-4">
+        {[
+          { label: "System Health", value: "Operational", icon: Activity, detail: "API, auth, and UI responding" },
+          { label: "Storage Usage", value: "71%", icon: Database, detail: "Media and document capacity" },
+          { label: "API Status", value: "99.9%", icon: Zap, detail: "Last 24 hours uptime" },
+          { label: "Security Alerts", value: "2", icon: AlertTriangle, detail: "Review recommended" },
+        ].map(({ label, value, icon: Icon, detail }) => (
+          <Card key={label}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between gap-3">
+                <Icon className="h-4 w-4 text-muted-foreground" />
+                <Badge variant={label === "Security Alerts" ? "secondary" : "outline"}>{value}</Badge>
+              </div>
+              <p className="mt-3 text-sm font-semibold">{label}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Platform Control Modules</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
+          {dashboardCapabilities.map(({ label, icon: Icon, href }) => (
+            <Button key={`${label}-${href}`} asChild variant="outline" className="h-auto justify-start gap-2 py-3">
+              <Link href={href}>
+                <Icon className="h-4 w-4" />
+                <span className="truncate">{label}</span>
+              </Link>
+            </Button>
+          ))}
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Users */}

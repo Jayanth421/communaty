@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { auth, db } from "@repo/firebase"
+import { FirebaseError } from "firebase/app"
 import { onAuthStateChanged, User, signOut as firebaseSignOut } from "firebase/auth"
 import { doc, setDoc, serverTimestamp, onSnapshot } from "firebase/firestore"
 
@@ -27,14 +28,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let unsubscribeSnapshot: (() => void) | undefined
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      unsubscribeSnapshot?.()
+      unsubscribeSnapshot = undefined
       setUser(currentUser)
       if (currentUser) {
         try {
           // Listen to user document in Firestore in real-time
           const userRef = doc(db, "users", currentUser.uid)
           
-          const unsubscribeSnapshot = onSnapshot(userRef, async (snap) => {
+          unsubscribeSnapshot = onSnapshot(userRef, async (snap) => {
             if (snap.exists()) {
               setRole((snap.data().role as UserRole) ?? "student")
               setLoading(false)
@@ -53,12 +58,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           }, (error) => {
             console.error("Error listening to user role:", error)
+            if (error instanceof FirebaseError && error.code === "permission-denied") {
+              console.warn("Signed in, but user profile is not readable. Falling back to student role.")
+            }
             setRole("student")
             setLoading(false)
           })
-
-          // Cleanup snapshot listener on unmount or auth change
-          return () => unsubscribeSnapshot()
         } catch (error) {
           console.error("Error setting up role listener:", error)
           setRole("student")
@@ -69,7 +74,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false)
       }
     })
-    return () => unsubscribe()
+    return () => {
+      unsubscribeSnapshot?.()
+      unsubscribe()
+    }
   }, [])
 
   const signOut = async () => {
