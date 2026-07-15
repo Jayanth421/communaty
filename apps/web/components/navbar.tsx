@@ -7,6 +7,7 @@ import { Button } from "@repo/ui/button"
 import { Moon, Sun, Bell, MessageSquare, UserCircle, Menu, X } from "lucide-react"
 import { useAuth } from "../context/auth-context"
 import { BrandMark } from "./brand-mark"
+import Image from "next/image";
 
 const navLinks = [
   { href: "/explore", label: "Explore" },
@@ -36,7 +37,9 @@ export function Navbar() {
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           <span className="sr-only">Toggle menu</span>
         </Button>
-        <Link href="/" className="mr-6 flex items-center">
+       <div className="mr-4 flex">  
+          <div className="mr-6">    
+          <nav className="hidden items-center gap-6 text-sm md:flex"> <Link href="/" className="mr-6 flex items-center">
   <Image
     src="https://cope-x.vercel.app/favicon.ico"
     alt="Cope-X Logo"
@@ -45,6 +48,7 @@ export function Navbar() {
     priority
   />
 </Link>
+</div><nav className="hidden items-center gap-6 text-sm md:flex">  
             <Link
               href="/explore"
               className="transition-colors hover:text-foreground/80 text-foreground/60"
