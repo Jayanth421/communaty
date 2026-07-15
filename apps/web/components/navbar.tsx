@@ -36,11 +36,18 @@ export function Navbar() {
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           <span className="sr-only">Toggle menu</span>
         </Button>
-        <div className="mr-4 flex">
-          <div className="mr-6">
-            <BrandMark />
-          </div>
-          <nav className="hidden items-center gap-6 text-sm md:flex">
+        <Image
+    src="https://cope-x.vercel.app/favicon.ico"
+    alt="CopeX Logo"
+    width={36}
+    height={36}
+    priority
+    unoptimized
+  />
+  <span className="hidden font-semibold md:block">
+    CopeX
+  </span>
+</Link>
             <Link
               href="/explore"
               className="transition-colors hover:text-foreground/80 text-foreground/60"
